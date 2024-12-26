@@ -20,6 +20,7 @@ under the License.
 !pragma layout smetana
 
 <style>
+
     rectangle {
         BackgroundColor LightBlue
     }
@@ -27,6 +28,9 @@ under the License.
 </style>
 
 package "Shared" {
+
+left to right direction
+
   rectangle "archiver"
   rectangle "artifact-resolver"
   rectangle "artifact-transfer"
@@ -51,6 +55,34 @@ package "Shared" {
   rectangle "verifier"
 }
 
+'hidden dependencies to change layout
+"archiver" -[hidden]down- "artifact-resolver"
+"artifact-resolver" -[hidden]down- "artifact-transfer"
+"artifact-transfer" -[hidden]down- "artifact-filters"
+
+"archiver"  -[hidden]left- "dependency-analyzer"
+"dependency-analyzer" -[hidden]down- "dependency-tree"
+"dependency-tree" -[hidden]down- "file-manager"
+"file-manager" -[hidden]down- "filtering"
+
+"dependency-analyzer" -[hidden]left- "invoker"
+"invoker" -[hidden]down- "jarsigner"
+"jarsigner" -[hidden]down- "mapping"
+"mapping" -[hidden]down- "project-utils"
+
+"invoker" -[hidden]left- "reporting-api"
+"reporting-api" -[hidden]down- "reporting-exec"
+"reporting-exec" -[hidden]down- "reporting-impl"
+
+"reporting-api" -[hidden]left- "script-interpreter"
+"script-interpreter" -[hidden]down- "incremental"
+"incremental" -[hidden]down- "io"
+"io" -[hidden]down- "jar"
+"jar" -[hidden]down- "resources"
+"resources" -[hidden]down- "utils"
+"utils" -[hidden]down- "verifier"
+
+
 url of "archiver" is [[https://github.com/apache/maven-archiver]]
 url of "artifact-resolver" is [[https://github.com/apache/maven-resolver]]
 url of "artifact-transfer" is [[https://github.com/apache/maven-artifact-transfer]]
@@ -60,7 +92,7 @@ url of "dependency-tree" is [[https://github.com/apache/maven-dependency-tree]]
 url of "file-manager" is [[https://github.com/apache/maven-file-management]]
 url of "filtering" is [[https://github.com/apache/maven-filtering]]
 url of "invoker" is [[https://github.com/apache/maven-invoker]]
-url of "jarsigner" is [[https://github.com/apache/maven-jarsigner-plugin]]
+url of "jarsigner" is [[https://github.com/apache/maven-jarsigner]]
 url of "mapping" is [[https://github.com/apache/maven-mapping]]
 url of "project-utils" is [[https://github.com/apache/maven-project-utils]]
 url of "reporting-api" is [[https://github.com/apache/maven-reporting-api]]
@@ -73,7 +105,5 @@ url of "jar" is [[https://github.com/apache/maven-shared-jar]]
 url of "resources" is [[https://github.com/apache/maven-shared-resources]]
 url of "utils" is [[https://github.com/apache/maven-shared-utils]]
 url of "verifier" is [[https://github.com/apache/maven-verifier]]
-
-
-
 @enduml
+

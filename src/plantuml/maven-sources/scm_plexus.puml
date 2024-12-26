@@ -28,18 +28,19 @@ under the License.
 
 package "Plexus" {
   rectangle "utils"
-  rectangle "Components"
+  ' rectangle "Components"
   rectangle "Classworlds"
   rectangle "Modello"
 }
 
 'hidden dependencies to change layout
-"utils" -[hidden]right-> "Components"
-"Components" -[hidden]right-> "Classworlds"
+' "utils" -[hidden]right-> "Components"
+' "Components" -[hidden]right-> "Classworlds"
+"utils" -[hidden]right-> "Classworlds"
 "Classworlds" -[hidden]right-> "Modello"
 
 url of "utils" is [[https://github.com/codehaus-plexus/plexus-utils]]
-url of "Components" is [[https://github.com/codehaus-plexus/plexus-components]]
+' url of "Components" is [[https://github.com/codehaus-plexus/plexus-components]]
 url of "Classworlds" is [[https://github.com/codehaus-plexus/plexus-classworlds]]
 url of "Modello" is [[https://github.com/codehaus-plexus/modello]]
 
