@@ -33,19 +33,15 @@ package "Shared" {
   rectangle "artifact-filters"
   rectangle "dependency-analyzer"
   rectangle "dependency-tree"
-  rectangle "downloader"
   rectangle "file-manager"
   rectangle "filtering"
   rectangle "invoker"
   rectangle "jarsigner"
   rectangle "mapping"
-  rectangle "osgi"
   rectangle "project-utils"
   rectangle "reporting-api"
   rectangle "reporting-exec"
   rectangle "reporting-impl"
-  rectangle "repository-builder"
-  rectangle "runtime"
   rectangle "script-interpreter"
   rectangle "incremental"
   rectangle "io"
@@ -55,6 +51,29 @@ package "Shared" {
   rectangle "verifier"
 }
 
-
+url of "archiver" is [[https://github.com/apache/maven-archiver]]
+url of "artifact-resolver" is [[https://github.com/apache/maven-resolver]]
+url of "artifact-transfer" is [[https://github.com/apache/maven-artifact-transfer]]
+url of "artifact-filters" is [[https://github.com/apache/maven-common-artifact-filters]]
+url of "dependency-analyzer" is [[https://github.com/apache/maven-dependency-analyzer]]
+url of "dependency-tree" is [[https://github.com/apache/maven-dependency-tree]]
+url of "file-manager" is [[https://github.com/apache/maven-file-management]]
+url of "filtering" is [[https://github.com/apache/maven-filtering]]
+url of "invoker" is [[https://github.com/apache/maven-invoker]]
+url of "jarsigner" is [[https://github.com/apache/maven-jarsigner-plugin]]
+url of "mapping" is [[https://github.com/apache/maven-mapping]]
 url of "project-utils" is [[https://github.com/apache/maven-project-utils]]
+url of "reporting-api" is [[https://github.com/apache/maven-reporting-api]]
+url of "reporting-exec" is [[https://github.com/apache/maven-reporting-exec]]
+url of "reporting-impl" is [[https://github.com/apache/maven-reporting-impl]]
+url of "script-interpreter" is [[https://github.com/apache/maven-script-interpreter]]
+url of "incremental" is [[https://github.com/apache/maven-shared-incremental]]
+url of "io" is [[https://github.com/apache/maven-shared-io]]
+url of "jar" is [[https://github.com/apache/maven-shared-jar]]
+url of "resources" is [[https://github.com/apache/maven-shared-resources]]
+url of "utils" is [[https://github.com/apache/maven-shared-utils]]
+url of "verifier" is [[https://github.com/apache/maven-verifier]]
+
+
+
 @enduml
