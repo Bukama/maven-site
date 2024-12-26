@@ -19,36 +19,28 @@ under the License.
 @startuml
 !pragma layout smetana
 
-skinparam rectangle {
-  BackgroundColor LightBlue
+<style>
+    rectangle {
+        BackgroundColor LightBlue
+    }
 }
+</style>
 
-package Misc {
-  rectangle Archetypes
-  rectangle Poms
-  rectangle Skins
-  rectangle Studies
-  rectangle Indexer
-  rectangle Wagon
-  rectangle "Plugin testing"
-  rectangle "dist-tool"
-  package Jenkins {
-    rectangle env
-    rectangle lib
-  }
+package "Maven Core" {
+  rectangle Maven
+  rectangle "Core ITs"
+  rectangle Resolver
+  rectangle "Ant Tasks"
 }
 
 'hidden dependencies to change layout
-Archetypes -[hidden]right-> Poms
-Poms -[hidden]right-> Skins
-Skins -[hidden]right-> Studies
-Studies -[hidden]right-> Indexer
-Indexer -[hidden]right-> Wagon
-Wagon -[hidden]right-> "Plugin testing"
+Maven -[hidden]right-> "Core ITs"
+"Core ITs" -[hidden]right-> Resolver
+Resolver -[hidden]right-> "Ant Tasks"
 
-Archetypes -[hidden]down-> "dist-tool"
-"dist-tool" -[hidden]right-> Jenkins
-
-'url of "Ant Tasks" is [[https://github.com/maven-resolver-ant-tasks]]
+url of Maven is [[https://github.com/apache/maven]]
+url of "Core ITs" is [[https://github.com/apache/maven-integration-testing]]
+url of Resolver is [[https://github.com/apache/maven-resolver]]
+url of "Ant Tasks" is [[https://github.com/maven-resolver-ant-tasks]]
 
 @enduml

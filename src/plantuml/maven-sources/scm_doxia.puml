@@ -19,9 +19,12 @@ under the License.
 @startuml
 !pragma layout smetana
 
-skinparam rectangle {
-  BackgroundColor LightBlue
+<style>
+    rectangle {
+        BackgroundColor LightBlue
+    }
 }
+</style>
 
 package "Maven Doxia" {
   rectangle Doxia
@@ -38,6 +41,10 @@ Doxia -[hidden]right-> "Site Tools"
 "Site Tools" -[hidden]right-> Site
 "Site Tools" -[hidden]right-> Tools
 
-'url of "Ant Tasks" is [[https://github.com/maven-resolver-ant-tasks]]
+url of Doxia is [[https://github.com/apache/maven-doxia]]
+url of "Site Tools" is [[https://github.com/apache/maven-doxia-sitetools]]
+url of Site is [[https://github.com/apache/maven-doxia-site]]
+url of Converter is [[https://github.com/apache/maven-doxia-converter]]
+url of LinkCheck is [[https://github.com/apache/maven-doxia-linkcheck]]
 
 @enduml

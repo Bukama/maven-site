@@ -19,10 +19,12 @@ under the License.
 @startuml
 !pragma layout smetana
 
-skinparam rectangle {
-  BackgroundColor LightBlue
+<style>
+    rectangle {
+        BackgroundColor LightBlue
+    }
 }
-
+</style>
 
 package Plugins {
 
@@ -55,6 +57,8 @@ package Plugins {
     rectangle changes
     rectangle checkstyle
     rectangle doap
+    'forgot "docck" ?'
+    rectangle docck
     rectangle javadoc
     rectangle jdeps
     rectangle jxr
@@ -63,7 +67,9 @@ package Plugins {
     rectangle "project-info-reports"
   }
 
-  package Tools {
+  package Tools{
+   'forgot "ant" ?'
+    rectangle ant
     rectangle antrun
     rectangle archetype
     rectangle assembly
@@ -79,6 +85,8 @@ package Plugins {
     rectangle plugin
     rectangle release
     rectangle "remote-resource"
+    'forgot "repository" ?'
+    rectangle repository
     rectangle scm
     rectangle "scm-publish"
     rectangle scripting
@@ -88,9 +96,10 @@ package Plugins {
 }
 
 'hidden dependencies to change layout
-Core      -[hidden]-> Packaging
-Packaging -[hidden]-> Reporting
-Reporting -[hidden]-> Tools
+Core      -[hidden]down-> Packaging
+Packaging -[hidden]down-> Reporting
+Packaging -[hidden]down-> Tools
+Reporting -[hidden]down-> Tools
 
 clean     -[hidden]> compiler
 compiler  -[hidden]> deploy
@@ -109,6 +118,41 @@ acr       -[hidden]> shade
 shade     -[hidden]> source
 source    -[hidden]> jlink
 jlink     -[hidden]> jmod
+
+changelog -[hidden]> changes
+changes  -[hidden]> checkstyle
+checkstyle -[hidden]> doap
+doap -[hidden]> docck
+docck -[hidden]> javadoc
+javadoc -[hidden]> jdeps
+jdeps -[hidden]> jxr
+jxr  -[hidden]> linkcheck
+linkcheck -[hidden]> pmd
+pmd -[hidden]> "project-info-reports"
+
+ant -[hidden]> antrun
+antrun -[hidden]> archetype
+archetype -[hidden]> assembly
+assembly -[hidden]> dependency
+dependency -[hidden]> enforcer
+enforcer -[hidden]> gpg
+gpg -[hidden]> help
+
+ant -[hidden]down->invoker
+invoker -[hidden]> jarsigner
+jarsigner -[hidden]> jdeprscan
+jdeprscan -[hidden]> patch
+patch -[hidden]> pdf
+pdf -[hidden]> plugin
+plugin -[hidden]> release
+invoker -[hidden]down->"remote-resource"
+"remote-resource" -[hidden]> repository
+repository -[hidden]> scm
+scm -[hidden]> "scm-publish"
+"scm-publish" -[hidden]> scripting
+scripting -[hidden]> stage
+stage -[hidden]> toolchains
+
 
 
 url of clean is [[https://github.com/apache/maven-clean-plugin]]
