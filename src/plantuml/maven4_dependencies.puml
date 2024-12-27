@@ -1,0 +1,246 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+@startuml
+hide stereotype
+
+skinparam linetype ortho
+
+<style>
+    rectangle {
+         backgroundColor LightBlue
+    }
+
+   .cornsilk {
+        BackgroundColor  #FFF8DC
+    }
+
+    .pastelyellow {
+        BackgroundColor #FFFAA0
+    }
+
+    .azure {
+        BackgroundColor #F0FFFF
+    }
+}
+</style>
+
+
+rectangle "slf4j-provider" as slf4jp {
+}
+
+rectangle distribution {
+}
+
+rectangle bom {
+}
+
+rectangle row1hidden {
+}
+
+hide row1hidden
+
+
+rectangle "slf4j-wrapper" as slf4jw {
+}
+
+rectangle embedder {
+}
+
+rectangle "commons-cli" as ccli <<pastelyellow>> {
+}
+
+rectangle "slf4j-api" as slf4japi <<pastelyellow>> {
+}
+
+rectangle compat {
+}
+
+rectangle "wagon-provider-api" as wagonproviderapi <<pastelyellow>> {
+}
+
+rectangle "shared-utils" as sharedutils <<pastelyellow>> {
+}
+
+rectangle "         core          " as core {
+}
+
+rectangle "plugin-api" as pluginapi {
+}
+
+rectangle sisu <<cornsilk>> {
+
+    rectangle plexus <<pastelyellow>> {
+    }
+
+    rectangle inject <<pastelyellow>> {
+    }
+}
+
+rectangle guice <<pastelyellow>> {
+}
+
+rectangle jansi <<pastelyellow>> {
+}
+
+rectangle "toolchain-builder" {
+}
+
+rectangle "toolchain-model" {
+}
+
+rectangle "settings-builder" {
+}
+
+rectangle "resolver-provider" {
+}
+
+rectangle "settings" {
+}
+rectangle "builder-support" {
+}
+
+rectangle "model-builder" {
+}
+
+rectangle "model-transform" {
+}
+
+rectangle "model" {
+}
+
+rectangle "artifact" {
+}
+
+rectangle "repository-metadata" {
+}
+
+rectangle resolver <<azure>> {
+
+    rectangle spi <<azure>> {
+    }
+
+    rectangle impl <<azure>> {
+    }
+
+    rectangle api <<azure>> {
+    }
+
+    rectangle util <<azure>> {
+    }
+
+    spi <-right- impl
+    impl -down-> util
+    spi -down-> api
+    api <-right- util
+}
+
+rectangle "plexus" as plexusbox <<cornsilk>> {
+
+    rectangle classworlds <<pastelyellow>> {
+    }
+
+    rectangle utils <<pastelyellow>> {
+    }
+
+    rectangle interpolation <<pastelyellow>> {
+    }
+
+    rectangle "sec-dispatcher" <<pastelyellow>> {
+    }
+
+    rectangle cipher <<pastelyellow>> {
+    }
+
+   classworlds -[hidden]right- utils
+   classworlds -[hidden]down- interpolation
+   interpolation -[hidden]"sec-dispatcher"
+   "sec-dispatcher" -right-> cipher
+
+}
+
+
+' Row 1
+slf4jp <-right- distribution
+distribution -[hidden]right- bom
+bom -[hidden]right- row1hidden
+
+' Row 2
+slf4jp -down-> slf4jw
+distribution -down-> embedder
+slf4jw <-right- embedder
+embedder -right-> ccli
+
+' double arrow for better alignment
+row1hidden -[hidden]down-> ccli
+ccli -[hidden]up- row1hidden
+
+' Row 3
+slf4jw -down-> slf4japi
+embedder -down-> compat
+compat -right-> wagonproviderapi
+
+ccli -[hidden]down- wagonproviderapi
+wagonproviderapi -[hidden]up- ccli
+
+' Row 4
+' slf4japi -[hidden]down- sharedutils
+' sharedutils -[hidden]up- slf4japi
+
+sharedutils <-right core
+compat -down-> core
+core -right-> pluginapi
+pluginapi -right-> plexus
+
+pluginapi -down-> "model"
+pluginapi -down-> "artifact"
+
+' wagonproviderapi -[hidden]down- sisu
+' sisu -[hidden]up- wagonproviderapi
+
+plexus -right-> inject
+plexus -down-> classworlds
+inject -right-> guice
+
+' Row 5 and below :D
+sharedutils -down-> jansi
+
+core -down-> "resolver-provider"
+"resolver-provider" -down-> impl
+"resolver-provider" -down-> "repository-metadata"
+"resolver-provider" -down-> "model-builder"
+
+core -down-> "settings-builder"
+"resolver-provider" -[hidden]right- "settings-builder"
+"settings-builder" -[hidden]right- "toolchain-builder"
+"settings-builder" -down-> "builder-support"
+"settings-builder" -down-> "settings"
+
+"model-builder" -down-> "model-transform"
+"model-builder" -down-> "model"
+"model-builder" -down-> "artifact"
+
+core -down-> "toolchain-builder"
+"toolchain-builder" -down-> "toolchain-model"
+
+"toolchain-builder" -right-> interpolation
+"settings-builder" -right-> interpolation
+"model-builder" -right-> interpolation
+
+
+@enduml
