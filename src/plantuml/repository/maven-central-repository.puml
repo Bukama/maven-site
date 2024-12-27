@@ -1,0 +1,133 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+@startuml
+hide stereotype
+
+'skinparam linetype polyline
+'skinparam linetype ortho
+
+<style>
+
+    rectangle {
+         BackgroundColor #E6E6FA
+    }
+
+   .innerrect {
+        BackgroundColor  LightBlue
+    }
+
+   .central {
+        BackgroundColor  #FFFDD0
+    }
+
+   .centralCDN {
+        BackgroundColor  #FFFAA0
+        FontStyle bold
+    }
+
+   .centralMirror {
+        BackgroundColor #FFFFF0
+    }
+
+    .cmi {
+        BackgroundColor #FFFAA0
+    }
+
+</style>
+
+
+rectangle "Project-dedicated staging repositories" as pd {
+
+    rectangle x <<innerrect>> {
+    }
+
+    rectangle y <<innerrect>> {
+    }
+
+    rectangle "..." as pdmore <<innerrect>> {
+    }
+
+    'hidden dependencies to change layout
+    x -[hidden]right- y
+    y -[hidden]right- pdmore
+}
+
+rectangle "Public forges (mutli-projects) staging repositories" as public {
+
+    rectangle Apache <<innerrect>> {
+    }
+
+    rectangle OSSRH <<innerrect>> {
+    }
+
+    rectangle "..." as publicmore  <<innerrect>> {
+    }
+
+    'hidden dependencies to change layout
+    Apache -[hidden]right- OSSRH
+    OSSRH -[hidden]right- publicmore
+
+
+}
+
+rectangle "Central repository" as central <<central>> {
+    rectangle "central data" as cd <<cmi>> {
+    }
+    note left of cd : Central archetype catalog
+    note right of cd : central index
+
+
+    rectangle "Central CDN" as cdn <<centralCDN>> {
+
+        rectangle cdnhidden {
+        }
+
+        hide cdnhidden
+    }
+
+    rectangle mirrors <<centralMirror>> {
+        rectangle ibiblio <<cmi>> {
+        }
+
+        rectangle Google <<cmi>> {
+        }
+
+        'hidden dependencies to change layout
+        ibiblio -[hidden]right- Google
+
+    }
+
+
+
+    ' (hidden) dependencies to change layout
+    cd -down-> cdn : publication
+    cd -down-> mirrors : publication
+    cdn -[hidden]right- mirrors
+
+
+}
+
+' (hidden) dependencies to change layout
+pd -[hidden]right- public
+
+pd <-down- cd : rysnc (deprecated))
+public -down-> cd : push
+
+
+@enduml
