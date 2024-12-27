@@ -157,7 +157,7 @@ The following command line switches are available:
 
 ## Differences between Maven 3 and 4
 
-![Sample multi-subproject](../../maven-sources/multi-subproject.svg)
+![Sample multi-subproject](../../multi-subproject.svg)
 
 The table below illustrates multiple scenarios which have changed between Maven 3 and 4. They assume a project structure
 as depicted above.
