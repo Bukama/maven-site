@@ -223,281 +223,211 @@ unfortunately, when a project cannot be downloaded from the central Maven reposi
 may depend upon a jar that has a closed-source license which prevents it from being in a central repository.
 There are three methods for dealing with this scenario.
 
-  1. Install the dependency locally using the *Maven Install Plugin*. The method is the simplest recommended method. For example:
+1. Install the dependency locally using the *Maven Install Plugin*. The method is the simplest recommended method. For example:
+
   ```
   mvn install:install-file -Dfile=non-maven-proj.jar -DgroupId=some.group -DartifactId=non-maven-proj -Dversion=1 -Dpackaging=jar
   ```
+ 
+  Notice that an address is still required, only this time you use the command line and the Maven Install Plugin will create a POM for you with the given address.
 
-    Notice that an address is still required, only this time you use the command line and the install plugin will
-    create a POM for you with the given address.
+2. Create your own repository and deploy it there. This is a favorite method for companies with an intranet and need to be able to keep everyone in synch. There is a Maven goal called `deploy:deploy-file` which is similar to the `install:install-file` goal (read the plugin's goal page for more information).
 
-   [[2]] Create your own repository and deploy it there. This is a favorite method for companies with an
-        intranet and need to be able to keep everyone in synch. There is a Maven goal called
-        `deploy:deploy-file` which is similar to the `install:install-file` goal (read the plugin's goal
-        page for more information).
+3. Set the dependency scope to `system` and define a `systemPath`. This is not recommended, however, but leads us to explaining the following elements:
 
-   [[3]] Set the dependency scope to `system` and define a `systemPath`. This is not recommended, however,
-        but leads us to explaining the following elements:
+  * `<classifier>`:
+    The classifier distinguishes artifacts that were built from the same POM but differ in content.
+    It is some optional and arbitrary string that - if present - is appended to the artifact name just after the version number.
 
-   []
+    As a motivation for this element, consider for example a project that offers an artifact targeting Java 11 but at the same time also an artifact that still supports Java 1.8.
+    The first artifact could be equipped with the classifier `jdk11` and the second one with `jdk8` such that clients can choose which one to use.
 
-  * <<classifier>>:\
-  The classifier distinguishes artifacts that were built from the same POM but differ in content. It is
-  some optional and arbitrary string that - if present - is appended to the artifact name just after the version number.
+    Another common use case for classifiers is to attach secondary artifacts to the project's main artifact.
+    If you browse the Maven central repository, you will notice that the classifiers `sources` and `javadoc` are used to deploy the project source code and API docs along with the packaged class files.
 
-  As a motivation for this element, consider for example a project that offers an artifact targeting Java 11 but at the
-  same time also an artifact that still supports Java 1.8. The first artifact could be equipped with the classifier
-  `jdk11` and the second one with `jdk8` such that clients can choose which one to use.
+  * `<type>`:
+    Corresponds to the chosen dependency type. This defaults to `jar`.
+    While it usually represents the extension on the filename of the dependency, that is not always the case: a type can be mapped to a different extension and a classifier.
+    The type often corresponds to the packaging used, though this is also not always the case.
+    Some examples are `jar`, `ejb-client` and `test-jar`: see [default artifact handlers](/ref/current/maven-core/artifact-handlers.html) for a list.
+    New types can be defined by plugins that set `extensions` to true, so this is not a complete list.
 
-  Another common use case for classifiers is to attach secondary artifacts to the project's main artifact. If
-  you browse the Maven central repository, you will notice that the classifiers `sources` and `javadoc` are used
-  to deploy the project source code and API docs along with the packaged class files.
+  * `<scope>`:
+    This element refers to the classpath of the task at hand (compiling and runtime, testing, etc.) as well as how to limit the transitivity of a dependency.
+    There are five scopes available:
 
-  * <<type>>:\
-  Corresponds to the chosen dependency type. This defaults to `jar`. While it usually represents
-  the extension on the filename of the dependency, that is not always the case: a type can be mapped to a
-  different extension and a classifier. The type often corresponds to the packaging used, though this is
-  also not always the case. Some examples are `jar`, `ejb-client` and `test-jar`:
-  see {{{/ref/current/maven-core/artifact-handlers.html}default artifact handlers}} for a list. New types can be
-  defined by plugins that set `extensions` to true, so this is not a complete list.
-
-  * <<scope>>:\
-  This element refers to the classpath of the task at hand (compiling and runtime, testing, etc.) as well as
-  how to limit the transitivity of a dependency. There are five scopes available:
-
-    * <<compile>> - this is the default scope, used if none is specified. Compile dependencies are available in all
+    * `<compile>` - this is the default scope, used if none is specified. Compile dependencies are available in all
       classpaths. Furthermore, those dependencies are propagated to dependent projects.
 
-    * <<provided>> - this is much like compile, but indicates you expect the JDK or a container to provide it at
+    * `<provided>` - this is much like compile, but indicates you expect the JDK or a container to provide it at
       runtime. It is only available on the compilation and test classpath, and is not transitive.
 
-    * <<runtime>> - this scope indicates that the dependency is not required for compilation, but is for execution.
+    * `<runtime>` - this scope indicates that the dependency is not required for compilation, but is for execution.
       It is in the runtime and test classpaths, but not the compile classpath.
 
-    * <<test>> - this scope indicates that the dependency is not required for normal use of the application, and
+    * `<test>` - this scope indicates that the dependency is not required for normal use of the application, and
       is only available for the test compilation and execution phases. It is not transitive.
 
-    * <<system>> - this scope is similar to `provided` except that you have to provide the JAR which contains
+    * `<system>` - this scope is similar to `provided` except that you have to provide the JAR which contains
       it explicitly. The artifact is always available and is not looked up in a repository.
 
-  * <<systemPath>>:\
-  is used <only> if the dependency `scope` is `system`. Otherwise, the build will fail if this
-  element is set. The path must be absolute, so it is recommended to use a property to specify the
-  machine-specific path (more on `properties` below),
-  such as `$\{java.home\}/lib`. Since it is assumed that system scope dependencies are installed <a priori>,
-  Maven does not check the repositories for the project, but instead checks to ensure that the file exists.
-  If not, Maven fails the build and suggests that you download and install it manually.
+  * `<systemPath>`:
+    is used <only> if the dependency `scope` is `system`.
+    Otherwise, the build will fail if this element is set.
+    The path must be absolute, so it is recommended to use a property to specify the machine-specific path (more on `properties` below), such as `$\{java.home\}/lib`.
+    Since it is assumed that system scope dependencies are installed *a priori*, Maven does not check the repositories for the project, but instead checks to ensure that the file exists.
+    If not, Maven fails the build and suggests that you download and install it manually.
 
-  * <<optional>>:\
-  Marks a dependency optional when this project itself is a dependency.
-  For example, imagine a project `A` that depends upon project `B` to
-  compile a portion of code that may not be used at runtime. In that case, if project `X` adds
-  project `A` as its own dependency, project `X` does not need project `B` on the classpath and Maven does
-  not need to install project `B` at all. Symbolically, if `=\`> represents a required dependency,
-  and `--\`> represents optional, although `A=\>B` may be the case when building A
-  `X=\>A--\>B` would be the case when building `X`.
+  * `<optional>`:
+    Marks a dependency optional when this project itself is a dependency.
+    For example, imagine a project `A` that depends upon project `B` to  compile a portion of code that may not be used at runtime.
+    In that case, if project `X` adds project `A` as its own dependency, project `X` does not need project `B` on the classpath and Maven does not need to install project `B` at all.
+    Symbolically, if `=>` represents a required dependency, and `-->` represents optional, although `A=>B` may be the case when building `A` `X=>A-->B` would be the case when building `X`.
 
-  In the shortest terms, `optional` lets other projects know that, when you use this project, you
-  do not require this dependency in order to work correctly.
+    In the shortest terms, `optional` lets other projects know that, when you use this project, you do not require this dependency in order to work correctly.
 
-**** Dependency Management
+##### Dependency Management
 
   Dependencies can be managed in the `dependencyManagement` section to affect the resolution of dependencies
   which are not fully qualified or to enforce the usage of a specific transitive dependency version. Further information
-  in {{{./guides/introduction/introduction-to-dependency-mechanism.html}Introduction to the Dependency Mechanism}}.
+  in [Introduction to the Dependency Mechanism](./guides/introduction/introduction-to-dependency-mechanism.html).
 
-**** Dependency Version Requirement Specification
+##### Dependency Version Requirement Specification
 
-  Dependencies' `version` elements define version requirements, which are used to compute dependency versions. Soft requirements can be replaced by
-  different versions of the same artifact found elsewhere in the dependency 
-  graph. Hard requirements mandate a particular version or versions and
-  override soft requirements. If there are no versions of a dependency that
-  satisfy all the hard requirements for that artifact, the build fails.
+  Dependencies' `version` elements define version requirements, which are used to compute dependency versions.
+  Soft requirements can be replaced by different versions of the same artifact found elsewhere in the dependency graph.
+  Hard requirements mandate a particular version or versions and override soft requirements.
+  If there are no versions of a dependency that satisfy all the hard requirements for that artifact, the build fails.
 
   Version requirements have the following syntax:
 
   * `1.0`: Soft requirement for 1.0. Use 1.0 if no other version appears earlier in the dependency tree.
-
   * `[1.0]`: Hard requirement for 1.0. Use 1.0 and only 1.0.
-
   * `(,1.0]`: Hard requirement for any version \<= 1.0. 
-
   * `[1.2,1.3]`: Hard requirement for any version between 1.2 and 1.3 inclusive.
-
   * `[1.0,2.0)`: 1.0 \<= x \< 2.0; Hard requirement for any version between 1.0 inclusive and 2.0 exclusive.
-
   * `[1.5,)`: Hard requirement for any version greater than or equal to 1.5.
-
   * `(,1.0],[1.2,)`: Hard requirement for any version less than or equal to 1.0 than or greater than
     or equal to 1.2, but not 1.1. Multiple requirements are separated by commas.
-
   * `(,1.1),(1.1,)`: Hard requirement for any version except 1.1; for example because 1.1 has a critical vulnerability.
   
-  Maven picks the highest version of each project that satisfies all the
-  hard requirements of the dependencies on that project. If no version
-  satisfies all the hard requirements, the build fails.
+  Maven picks the highest version of each project that satisfies all the hard requirements of the dependencies on that project.
+  If no version satisfies all the hard requirements, the build fails.
 
-**** Version Order Specification
+#### Version Order Specification
 
-  If version strings are syntactically correct {{{https://semver.org/spec/v1.0.0.html}Semantic Versioning 1.0.0}}
-  version numbers, then in most cases version comparison follows the precedence rules outlined in that specification.
-  These versions are the commonly encountered alphanumeric ASCII strings such as 2.15.2-alpha.
-  More precisely, this is true if both version strings to be compared match the "valid semver"
-  production in the BNF grammar for semantic versioning and both version strings only
-  use lower case letters. Maven does not consider any semantics implied by Semantic Versioning.
-  
-  <<Important>>: This is only true for Semantic Versioning <1.0.0>. The Maven version order algorithm
-  is not compatible with Semantic Versioning <2.0.0>. In particular, Maven does not special case the
-  plus sign or consider build identifiers.
+If version strings are syntactically correct [Semantic Versioning 1.0.0](https://semver.org/spec/v1.0.0.html)
+version numbers, then in most cases version comparison follows the precedence rules outlined in that specification.
+These versions are the commonly encountered alphanumeric ASCII strings such as 2.15.2-alpha.
+More precisely, this is true if both version strings to be compared match the "valid semver"
+production in the BNF grammar for semantic versioning and both version strings only
+use lower case letters. Maven does not consider any semantics implied by Semantic Versioning.
 
-  <<Important>>: Maven compares version strings using case insensitive rules. Semver is
-  case sensitive. Thus in Semver, 3.2-ALPHA1 compares greater than 3.2-alpha1. In Maven,
-  3.2-ALPHA1 compares equal to 3.2-alpha1.
+**Important**: This is only true for Semantic Versioning *1.0.0*. The Maven version order algorithm
+is not compatible with Semantic Versioning *2.0.0*. In particular, Maven does not special case the
+plus sign or consider build identifiers.
 
-  When version strings do not follow semantic versioning, a more complex set of rules is required. 
-  Each Maven version string is split into tokens
-  between dots ('`.`'), hyphens ('`-`'), underscores ('`_`'), and transitions between ASCII digits and characters.
-  The separator is recorded and will have effect on the order. A transition 
-  between ASCII digits and characters is equivalent to a hyphen.
-  Empty tokens are replaced with "`0`". This gives a sequence of version numbers (numeric tokens) and version qualifiers (non-numeric tokens)
-  with "`.`" or "`-`" prefixes.
+**Important**: Maven compares version strings using case-insensitive rules. Semver is case-sensitive.
+Thus in Semver, 3.2-ALPHA1 compares greater than 3.2-alpha1. In Maven, 3.2-ALPHA1 compares equal to 3.2-alpha1.
 
-  Splitting and Replacing Examples:
+When version strings do not follow semantic versioning, a more complex set of rules is required. 
+Each Maven version string is split into tokens between dots ('`.`'), hyphens ('`-`'), underscores ('`_`'), and transitions between ASCII digits and characters.
+The separator is recorded and will have effect on the order. A transition between ASCII digits and characters is equivalent to a hyphen.
+Empty tokens are replaced with '`0`'. This gives a sequence of version numbers (numeric tokens) and version qualifiers (non-numeric tokens)
+with '`.`' or '`-`' prefixes.
 
-  * `1-1.foo-bar1baz-.1` -> `1-1.foo-bar-1-baz-0.1`
+Splitting and Replacing Examples:
 
-  []
+* `1-1.foo-bar1baz-.1` -> `1-1.foo-bar-1-baz-0.1`
 
-  Then, starting from the end of the version, the trailing "null" values 
-  (`0`, `""`, "`final`", "`ga`") are trimmed. This process is
-  repeated at each remaining hyphen from end to start.
+Then, starting from the end of the version, the trailing "null" values (`0`, `""`, "`final`", "`ga`") are trimmed.
+This process is repeated at each remaining hyphen from end to start.
 
-  Trimming Examples:
+Trimming Examples:
 
-  * `1.0.0` -> `1`
+* `1.0.0` -> `1`
+* `1.ga` -> `1`
+* `1.final` -> `1`
+* `1.0` -> `1`
+* `1.` -> `1`
+* `1-` -> `1`
+* `1.0.0-foo.0.0` -> `1-foo`
+* `1.0.0-0.0.0` -> `1`
 
-  * `1.ga` -> `1`
+Following tokenization and trimming, the shorter token sequence is 
+padded with enough "`null`" values with matching prefix to have the same length as the longer one.
+Padded "`null`" values depend on the separator of the other version: `0` for '`.`', '` `' for '`-`' and a 
+transition between ASCII digits and characters.
 
-  * `1.final` -> `1`
+Then the two sequences are compared token by token from beginning to end (left-to-right in the original strings).
+If each token in one sequence compares equal to the corresponding token in the other sequence, then the two version strings are equals.
+Otherwise, the result is the comparison of the tokens from the first position in the sequences where they are not equal:
+less than if the first non-matching token in the first string is less than the corresponding token in the second string, greater than if the 
+first non-matching token in the first string is greater than the corresponding token in the second string. 
 
-  * `1.0` -> `1`
+Individual tokens are compared according to the following rules:
 
-  * `1.` -> `1`
+* Tokens comprised of the ASCII digits 0-9 are called "numeric tokens".
+  Tokens comprised of any other characters, including non-ASCII digits, are called "qualifiers". 
 
-  * `1-` -> `1`
+* If the separator is the same, then compare the token:
+  * Numeric tokens have the usual ordering of integers.
+  * Qualifiers are first converted to lower case in the English locale. 
+    Then they are ordered as by the `compareTo()` method of `java.lang.String`,
+    except for the following tokens which come first in this order:
 
-  * `1.0.0-foo.0.0` -> `1-foo`
+    `alpha` \< `beta` \< `milestone` \< `rc` = `cr` \< `snapshot` \< ` ` = `final` = `ga` = `release` \< `sp`
 
-  * `1.0.0-0.0.0` -> `1`
+  * the `alpha`, `beta` and `milestone` qualifiers can respectively be shortened to `a`, `b` and `m` when directly followed by a number.
+  * Alphabetic tokens other than the special cases described above come before numeric tokens.
+  * Alphabetic tokens are compared in a case-insensitive fashion in the [English locale](https://docs.oracle.com/javase/8/docs/api/java/util/Locale.html#ENGLISH). For example, `A` and `a` are treated the same as are `i` and `I` and `é` and `É`. 
 
-  []
+* else `.qualifier` = `-qualifier` \< `-number` \< `.number`
+* `alpha` \< `a1` \< `beta` \< `b1` \< `milestone` \< `m1` \< `rc` = `cr` \< `snapshot` \< ` ` = `final` = `ga` = `release` \< `sp`
 
+Following semver rules is encouraged, and some qualifiers are discouraged:
 
-  Following tokenization and trimming, the shorter token sequence is 
-  padded with enough "null" values with matching prefix to have the same length as the longer one.
-  Padded "null" values depend on the separator of the other version: 0 for '.', "" for '-' and a 
-  transition between ASCII digits and characters.
+* Prefer `alpha`, `beta`, and `milestone` qualifiers over `ea` and `preview`.
+* Prefer `1.0.0-RC1` over `1.0.0.RC1`.
+* The usage of `CR` qualifier is discouraged. Use `RC` instead.
+* The usage of `final`, `ga`, and `release` qualifiers is discouraged. Use no qualifier instead.
+* The usage of `SP` qualifier is discouraged. Increment the patch version instead.
+* Avoid non-ASCII characters, including non-ASCII digits, which may sort in surprising ways.
+* Avoid upper case characters.
 
-  Then the two sequences are compared token by token from beginning to end
-  (left-to-right in the original strings). If each token 
-  in one sequence compares equal to the corresponding token in the other sequence, then the
-  then the two version strings are equals. Otherwise, the result is the comparison
-  of the tokens from the first position in the sequences where they are not equal:
-  less than if the first non-matching token in the first string is less than the
-  corresponding token in the second string, greater than if the 
-  first non-matching token in the first string is greater than the
-  corresponding token in the second string, 
+End Result Examples:
 
-  Individual tokens are compared according to the following rules:
+* `1` \< `1.1` (number padding)
+* `1-snapshot` \< `1` \< `1-sp` (qualifier padding)
+* `1-foo2` \< `1-foo10` (correctly automatically "switching" to numeric order)
+* `1.foo` = `1-foo` \< `1-1` \< `1.1`
+* `1.ga` = `1-ga` = `1-0` = `1.0` = `1` (removing of trailing "null" values)
+* `1-sp` \> `1-ga`
+* `1-sp.1` \> `1-ga.1`
+* `1-sp-1` \< `1-ga-1`
+* `1-a1` = `1-alpha-1`
+* `1.0-alpha1` = `1.0-ALPHA1` (case insensitivity)
+* `1.7` \> `1.K`
+* `5.zebra` \> `5.aardvark`
+* `1.α` \> `1.b` (Note the Greek letter alpha.)
 
-  * Tokens comprised of the ASCII digits 0-9 are called "numeric tokens".
-    Tokens comprised of any other characters, including non-ASCII digits, are called "qualifiers". 
+**Note**: Contrary to what was stated in some design documents, for version order, snapshots are not treated differently than releases or any other qualifier.
 
-  * If the separator is the same, then compare the token:
-
-    * Numeric tokens have the usual ordering of integers.
-
-    * Qualifiers are first converted to lower case in the English locale. 
-      Then they are ordered as by the `compareTo()` method of `java.lang.String`,
-      except for the following tokens which come first in this order:
-
-    "`alpha`" \< "`beta`" \< "`milestone`" \< "`rc`" = "`cr`" \< "`snapshot`" \< "" = "`final`" = "`ga`" = "`release`" \< "`sp`"
-
-        * the "`alpha`", "`beta`" and "`milestone`" qualifiers can respectively be shortened to "a", "b" and "m" when directly followed by a number.
-
-    * Alphabetic tokens other than the special cases described above come before numeric tokens.
-
-    * Alphabetic tokens are compared in a case insensitive fashion in the {{{https://docs.oracle.com/javase/8/docs/api/java/util/Locale.html#ENGLISH}English locale}}. For example, "`A`" and "`a`" are treated the same as are "`i`" and "`I`" and "`é`" and "`É`". 
-
-  * else "`.qualifier`" = "`-qualifier`" \< "`-number`" \< "`.number`"
-
-  * `alpha` \< `a1` \< `beta` \< `b1` \< `milestone` \< `m1` \< `rc` = `cr` \< `snapshot` \< `` = `final` = `ga` = `release` \< `sp`
-
-  []
-
-   Following semver rules is encouraged, and some qualifiers are discouraged:
-   
-   * Prefer '`alpha`', '`beta`', and '`milestone`' qualifiers over '`ea`' and '`preview`'.
-
-   * Prefer '`1.0.0-RC1`'' over '`1.0.0.RC1`'.
-   
-   * The usage of '`CR`' qualifier is discouraged. Use '`RC`' instead.
-   
-   * The usage of '`final`', '`ga`', and '`release`' qualifiers is discouraged. Use no qualifier instead.
-   
-   * The usage of '`SP`' qualifier is discouraged. Increment the patch version instead.
-
-   * Avoid non-ASCII characters, including non-ASCII digits, which may sort in surprising ways.
-
-   * Avoid upper case characters.
-
-  []
-
-  End Result Examples:
-
-  * "`1`" \< "`1.1`" (number padding)
-
-  * "`1-snapshot`" \< "`1`" \< "`1-sp`" (qualifier padding)
-
-  * "`1-foo2`" \< "`1-foo10`" (correctly automatically "switching" to numeric order)
-
-  * "`1.foo`" = "`1-foo`" \< "`1-1`" \< "`1.1`"
-
-  * "`1.ga`" = "`1-ga`" = "`1-0`" = "`1.0`" = "`1`" (removing of trailing "null" values)
-
-  * "`1-sp`" \> "`1-ga`"
-
-  * "`1-sp.1`" \> "`1-ga.1`"
-
-  * "`1-sp-1`" \< "`1-ga-1`"
-
-  * "`1-a1`" = "`1-alpha-1`"
-
-  * "`1.0-alpha1`" = "`1.0-ALPHA1`" (case insensitivity)
-
-  * "`1.7`" \> "`1.K`"
-
-  * "`5.zebra`" \> "`5.aardvark`"
-
-  * "`1.α`" \> "`1.b`" (Note the Greek letter alpha.)
-
-  Note: Contrary to what was stated in some design documents, for version order, snapshots are not treated differently than releases or any other qualifier.
-
-  Note: As `2.0-rc1` \< `2.0`, the version requirement `[1.0,2.0)` excludes `2.0` but includes version `2.0-rc1`, which is contrary to
+**Note**: As `2.0-rc1` \< `2.0`, the version requirement `[1.0,2.0)` excludes `2.0` but includes version `2.0-rc1`, which is contrary to
   what most people expect. In addition, Gradle interprets it differently, resulting in different dependency trees for the same POM.
   If the intention is to restrict it to `1.*` versions, the better version requirement is `[1,1.999999]` or `[1,2-alpha)`.
 
-**** Version Order Testing
+##### Version Order Testing
 
-    The maven distribution includes a tool to check version order. It was used to produce the examples in the previous paragraphs. Feel free to run it yourself when in doubt. You can run it like this:
+The maven distribution includes a tool to check version order. It was used to produce the examples in the previous paragraphs. Feel free to run it yourself when in doubt. You can run it like this:
 
-----------------------------------------
+```
 java -jar ${MAVEN_HOME}/lib/maven-artifact-${currentStableVersion}.jar [versions...]
-----------------------------------------
+```
 
-    example:
+example:
 
-----------------------------------------
+```
 $ java -jar ./lib/maven-artifact-${currentStableVersion}.jar  1 2 1.1
 Display parameters as parsed by Maven (in canonical form and as a list of tokens) and comparison result:
 1. 1 -> 1; tokens: [1]
@@ -505,19 +435,18 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
 2. 2 -> 2; tokens: [2]
    2 > 1.1
 3. 1.1 -> 1.1; tokens: [1, 1]
-----------------------------------------
+```
 
-**** Exclusions
+##### Exclusions
 
-  It is sometimes useful to limit a dependency's transitive dependencies. A dependency may have incorrectly
-  specified scopes, or dependencies that conflict with other dependencies in your project. Exclusions tell Maven not to include a
-  specified artifact in the classpath even if it is a dependency of one or more of this project's dependencies
-  (a transitive dependency). For example, `maven-embedder` depends on `maven-core`.
-  Suppose you want to depend on maven-embedder but do not want to include maven-core 
-  or its dependencies in the classpath. Then add `maven-core` as an `exclusion` in the element that declares the 
-  dependency on maven-embedder:
+It is sometimes useful to limit a dependency's transitive dependencies.
+A dependency may have incorrectly specified scopes, or dependencies that conflict with other dependencies in your project.
+Exclusions tell Maven not to include a specified artifact in the classpath even if it is a dependency of one or more of this project's dependencies (a transitive dependency).
+For example, `maven-embedder` depends on `maven-core`.
+Suppose you want to depend on maven-embedder but do not want to include maven-core or its dependencies in the classpath.
+Then add `maven-core` as an `exclusion` in the element that declares the dependency on maven-embedder:
 
-+-----------------------------+
+```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   ...
   <dependencies>
@@ -536,14 +465,14 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
   </dependencies>
   ...
 </project>
-+-----------------------------+
+```
 
-  This only removes the path to maven-core from this one dependency. If maven-core appears as
-  a direct or transitive dependency elsewhere in the POM, it can still be added to the classpath.
+This only removes the path to maven-core from this one dependency. If maven-core appears as
+a direct or transitive dependency elsewhere in the POM, it can still be added to the classpath.
 
-  Wildcard excludes make it easy to exclude all of a dependency's
-  transitive dependencies. In the case below, you may be working with the maven-embedder and you want to manage
-  the dependencies you use, so you exclude all the transitive dependencies:
+Wildcard excludes make it easy to exclude all of a dependency's
+transitive dependencies. In the case below, you may be working with the maven-embedder and you want to manage
+the dependencies you use, so you exclude all the transitive dependencies:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -566,16 +495,13 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
 </project>
 ```
 
-  * <<exclusions>>:
-  Exclusions contain one or more `exclusion` elements, each containing a `groupId` and
-  `artifactId` denoting a dependency to exclude. Unlike `optional`, which may or may not
-  be installed and used, `exclusions` actively remove artifacts from the dependency tree.
+`<exclusions>` contain one or more `exclusion` elements, each containing a `groupId` and `artifactId` denoting a dependency to exclude.
+Unlike `optional`, which may or may not be installed and used, `exclusions` actively remove artifacts from the dependency tree.
 
-*** Inheritance
+#### Inheritance
 
-  One powerful addition that Maven brings to build management is the concept of project inheritance.
-  Although in build systems such as Ant inheritance can be simulated, Maven 
-  makes project inheritance explicit in the project object model.
+One powerful addition that Maven brings to build management is the concept of project inheritance.
+Although in build systems such as Ant inheritance can be simulated, Maven makes project inheritance explicit in the project object model.
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -588,71 +514,43 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
 </project>
 ```
 
-  The `packaging` type is required to be `pom` for
-  <parent> and <aggregation> (multi-module) projects. These types define the goals bound
-  to a set of lifecycle stages. For example, if packaging is `jar`, then the
-  `package` phase will execute the `jar:jar` goal. Now we may add values to the
-  parent POM, which will be inherited by its children. Most elements from the parent POM
-  are inherited by its children, including:
+The `<packaging>` type is required to be `pom` for *parent* and *aggregation* (multi-module) projects.
+These types define the goals bound to a set of lifecycle stages.
+For example, if packaging is `jar`, then the `package` phase will execute the `jar:jar` goal.
+Now we may add values to the parent POM, which will be inherited by its children.
+Most elements from the parent POM are inherited by its children, including:
 
-    * groupId
-
-    * version
-
-    * description
-
-    * url
-
-    * inceptionYear
-
-    * organization
-
-    * licenses
-
-    * developers
-
-    * contributors
-
-    * mailingLists
-
-    * scm
-
-    * issueManagement
-
-    * ciManagement
-
-    * properties
-
-    * dependencyManagement
-
-    * dependencies
-
-    * repositories
-
-    * pluginRepositories
-
-    * build
-
-      * plugin executions with matching ids
-
-      * plugin configuration
-
-      * etc.
-
-    * reporting
+* groupId
+* version
+* description
+* url
+* inceptionYear
+* organization
+* licenses
+* developers
+* contributors
+* mailingLists
+* scm
+* issueManagement
+* ciManagement
+* properties
+* dependencyManagement
+* dependencies
+* repositories
+* pluginRepositories
+* build
+  * plugin executions with matching ids
+  * plugin configuration
+  * etc.
+* reporting
 
 
-  Notable elements which are `not` inherited include:
+ Notable elements which are **not** inherited include:
 
-    * artifactId
-
-    * name
-
-    * prerequisites
-
-    * profiles (but the effects of active profiles from parent POMs are)
-
-    []
+* artifactId
+* name
+* prerequisites
+* profiles (but the effects of active profiles from parent POMs are)
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -669,19 +567,17 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
 </project>
 ```
 
-  Notice the `relativePath` element. It is not required, but may be used as a signifier
-  to Maven to first search the path given for this project's parent, before searching the
-  local and then remote repositories.
+Notice the `<relativePath>` element.
+It is not required, but may be used as a signifier to Maven to first search the path given for this project's parent, before searching the local and then remote repositories.
 
-  To see inheritance in action, just have a look at the
-  {{{https://github.com/apache/maven-apache-parent/blob/master/pom.xml}ASF}} or
-  {{{https://github.com/apache/maven-parent/blob/master/pom.xml}Maven}} parent POM's.
+To see inheritance in action, just have a look at the [ASF](https://github.com/apache/maven-apache-parent/blob/master/pom.xml) or [Maven](https://github.com/apache/maven-parent/blob/master/pom.xml) parent POM's.
   
-  Detailed inheritance rules are outlined in {{{https://maven.apache.org/ref/3-LATEST/maven-model-builder/index.html#Inheritance_Assembly}Maven Model Builder}}.
-  All URLs are transformed when being inherited by default. The other ones are just inherited as is.
-  For plugin configuration you can overwrite the inheritance behaviour with the attributes `combine.children` or `combine.self` outlined in {{Plugins}}.
+Detailed inheritance rules are outlined in [Maven Model Builder](https://maven.apache.org/ref/3-LATEST/maven-model-builder/index.html#Inheritance_Assembly).
+All URLs are transformed when being inherited by default.
+The other ones are just inherited as is.
+For plugin configuration you can overwrite the inheritance behaviour with the attributes `combine.children` or `combine.self` outlined in the plugin sections.
 
-**** The Super POM
+##### The Super POM
 
   Similar to the inheritance of objects in object oriented programming, POMs that extend
   a parent POM inherit certain values from that parent. Moreover, just as Java objects
@@ -693,7 +589,7 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
   You can take a look at how the Super POM affects your Project Object Model by creating a
   minimal `pom.xml` and executing on the command line: `mvn help:effective-pom`
 
-**** Dependency Management
+##### Dependency Management
 
   Besides inheriting certain top-level elements, parents have elements to configure values for
   child POMs and transitive dependencies. One of those elements is
@@ -717,7 +613,7 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
   `mvn dependency:tree` is helpful.
 
 
-*** Aggregation (or Multi-Module)
+#### Aggregation (or Multi-Module)
 
   A project with modules is known as a multi-module, or aggregator project. Modules are projects
   that this POM lists, and are executed as a group. A `pom` packaged project may
@@ -748,7 +644,7 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
   To see aggregation in action, have a look at the
   {{{https://github.com/apache/maven/blob/master/pom.xml}Maven}} base POM.
 
-**** A final note on {Inheritance v. Aggregation}
+#####A final note on {Inheritance v. Aggregation}
 
   Inheritance and aggregation create a nice dynamic to control builds through a single,
   high-level POM. You often see projects that are both parents and aggregators.
@@ -760,7 +656,7 @@ Display parameters as parsed by Maven (in canonical form and as a list of tokens
   not necessarily have - any modules that it aggregates. Conversely, a POM project may aggregate
   projects that do not inherit from it.
 
-** Properties
+## Properties
 
   Properties are the last required piece to understand POM basics. Maven properties
   are value placeholders, like properties in Ant. Their values are accessible anywhere
