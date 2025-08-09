@@ -637,31 +637,30 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
 </project>
 ```
 
-  You do not need to consider the inter-module dependencies yourself when listing the modules; i.e. the
-  ordering of the modules given by the POM is not important. Maven will topologically sort the modules
-  such that dependencies are always build before dependent modules.
+You do not need to consider the inter-module dependencies yourself when listing the modules; i.e. the
+ordering of the modules given by the POM is not important. Maven will topologically sort the modules
+such that dependencies are always build before dependent modules.
 
-  To see aggregation in action, have a look at the
-  {{{https://github.com/apache/maven/blob/master/pom.xml}Maven}} base POM.
+To see aggregation in action, have a look at the [Maven base POM](https://github.com/apache/maven/blob/master/pom.xml).
 
-#####A final note on {Inheritance v. Aggregation}
+##### A final note on (Inheritance v. Aggregation)
 
-  Inheritance and aggregation create a nice dynamic to control builds through a single,
-  high-level POM. You often see projects that are both parents and aggregators.
-  For example, the entire Maven core runs through a single base POM
-  {{{https://svn.apache.org/viewvc/maven/maven-3/trunk/pom.xml?view=markup}`org.apache.maven:maven`}},
-  so building the Maven project can be executed by a single command: `mvn compile`.
-  However, an aggregator project and a parent project are both POM projects, they are not
-  one and the same and should not be confused. A POM project may be inherited from - but does
-  not necessarily have - any modules that it aggregates. Conversely, a POM project may aggregate
-  projects that do not inherit from it.
+Inheritance and aggregation create a nice dynamic to control builds through a single,
+high-level POM. You often see projects that are both parents and aggregators.
+For example, the entire Maven core runs through a single base POM
+[`org.apache.maven:maven`](https://github.com/apache/maven/blob/master/pom.xml),
+so building the Maven project can be executed by a single command: `mvn compile`.
+However, an aggregator project and a parent project are both POM projects, they are not
+one and the same and should not be confused. A POM project may be inherited from - but does
+not necessarily have - any modules that it aggregates. Conversely, a POM project may aggregate
+projects that do not inherit from it.
 
 ## Properties
 
-  Properties are the last required piece to understand POM basics. Maven properties
-  are value placeholders, like properties in Ant. Their values are accessible anywhere
-  within a POM by using the notation `$\{X\}`, where `X` is the property. Or they can be used by plugins
-  as default values, for example:
+Properties are the last required piece to understand POM basics. Maven properties
+are value placeholders, like properties in Ant. Their values are accessible anywhere
+within a POM by using the notation `$\{X\}`, where `X` is the property. Or they can be used by plugins
+as default values, for example:
 
 ```xml
 <project>
@@ -678,49 +677,40 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
 </project>
 ```
 
-  They come in five different styles:
+They come in five different styles:
 
-  [[1]]  `env.X`: Prefixing a variable with "env." will return the shell's environment variable. For example,
-  `$\{env.PATH\}` contains the PATH environment variable.
+1. `env.X`: Prefixing a variable with "env." will return the shell's environment variable.
+  For example, `${env.PATH}` contains the PATH environment variable.
 
-  <Note:> While environment variables themselves are case-insensitive on Windows, lookup of properties is
-  case-sensitive. In other words, while the Windows shell returns the same value for `%PATH%` and `%Path%`,
-  Maven distinguishes between `$\{env.PATH\}` and `$\{env.Path\}`. <<The names of environment
-  variables are normalized to all upper-case>> for the sake of reliability.
+  *Note*: While environment variables themselves are case-insensitive on Windows, lookup of properties is case-sensitive.
+  In other words, while the Windows shell returns the same value for `%PATH%` and `%Path%`, Maven distinguishes between `${env.PATH\}` and `${env.Path\}`.
+  **The names of environment variables are normalized to all upper-case** for the sake of reliability.
 
-  [[2]]  `project.x`: A dot (.) notated path in the POM will contain the corresponding element's value.
-  For example: `\<project\>\<version\>1.0\</version\>\</project\`> is accessible via
-  `$\{project.version\}`.
+2. `project.x`: A dot (`.`) notated path in the POM will contain the corresponding element's value.
+   For example: `<project><version>1.0</version></project`> is accessible via `${project.version}`.
+3. `settings.x`: A dot (`.`) notated path in the `settings.xml` will contain the corresponding element's value.
+   For example: `<settings><offline>false</offline></settings`> is accessible via `${settings.offline}`.
+4. Java System Properties: All properties accessible via `java.lang.System.getProperties()` are available as POM properties, such as `${java.home}`.
+5. `x`: Set within a `<properties /`> element in the POM. The value of `<properties><someVar>value</someVar></properties`> may be used as `${someVar}`.
 
-  [[3]]  `settings.x`: A dot (.) notated path in the `settings.xml` will contain the corresponding element's value.
-  For example: `\<settings\>\<offline\>false\</offline\>\</settings\`> is accessible via
-  `$\{settings.offline\}`.
 
-  [[4]]  Java System Properties: All properties accessible via `java.lang.System.getProperties()` are
-  available as POM properties, such as `$\{java.home\}`.
+## Build Settings
 
-  [[5]]  `x`: Set within a `\<properties /\`> element in the POM. The value of
-  `\<properties\>\<someVar\>value\</someVar\>\</properties\`> may be used as `$\{someVar\}`.
+Beyond the basics of the POM given above, there are two more elements that must be understood before
+claiming basic competency of the POM. They are the `<build>` element, that handles things like
+declaring your project's directory structure and managing plugins; and the `<reporting>` element,
+that largely mirrors the build element for reporting purposes.
 
-  []
+## Build
 
-* Build Settings
+According to the POM 4.0.0 XSD, the `build` element is conceptually divided into two parts:
+there is a `BaseBuild` type which contains the set of elements common to both `build` elements
+(the top-level build element under `project` and the build element under `profiles`,
+covered below); and there is the `Build` type, which contains the `BaseBuild` set as well as more
+elements for the top level definition. Let us begin with an analysis of the common elements between
+the two.
 
-  Beyond the basics of the POM given above, there are two more elements that must be understood before
-  claiming basic competency of the POM. They are the `build` element, that handles things like
-  declaring your project's directory structure and managing plugins; and the `reporting` element,
-  that largely mirrors the build element for reporting purposes.
-
-** Build
-
-  According to the POM 4.0.0 XSD, the `build` element is conceptually divided into two parts:
-  there is a `BaseBuild` type which contains the set of elements common to both `build` elements
-  (the top-level build element under `project` and the build element under `profiles`,
-  covered below); and there is the `Build` type, which contains the `BaseBuild` set as well as more
-  elements for the top level definition. Let us begin with an analysis of the common elements between
-  the two.
-
-  <Note: These different> `build` <elements may be denoted "project build" and "profile build".>
+*Note*: These different `build` elements may be denoted "project build" and "profile build".
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -737,14 +727,14 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
 </project>
 ```
 
-*** The BaseBuild Element Set
+#### The BaseBuild Element Set
 
-  `BaseBuild` is exactly as it sounds: the base set of elements between the two `build` elements in the POM.
+`BaseBuild` is exactly as it sounds: the base set of elements between the two `build` elements in the POM.
 
 ```xml
 <build>
   <defaultGoal>install</defaultGoal>
-  <directory>\${project.basedir}/target</directory>
+  <directory>${project.basedir}/target</directory>
   <finalName>${artifactId}-${version}</finalName>
   <filters>
     <filter>filters/filter1.properties</filter>
@@ -753,43 +743,43 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
 </build>
 ```
 
-  * <<defaultGoal>>:
+  * **defaultGoal**:
   the default goal or phase to execute if none is given. If a goal is given, it should be defined as it is
   in the command line (such as `jar:jar`). The same goes for if a phase is defined (such as install).
 
-  * <<directory>>:
+  * **directory**:
   This is the directory where the build will dump its files or, in Maven parlance, the build's target.
-  It aptly defaults to `$\{project.basedir\}/target`.
+  It aptly defaults to `${project.basedir}/target`.
 
-  * <<finalName>>:
+  * **finalName**:
   This is the name of the bundled project when it is finally built (sans the file extension, for
-  example: `my-project-1.0.jar`). It defaults to `$\{artifactId\}-$\{version\}`. The term
+  example: `my-project-1.0.jar`). It defaults to `${artifactId}-${version}`. The term
   "finalName" is kind of a misnomer, however, as plugins that build the bundled project have every
   right to ignore/modify this name (but they usually do not). For example, if the `maven-jar-plugin`
   is configured to give a jar a `classifier` of `test`, then the actual jar defined above will
   be built as `my-project-1.0-test.jar`.
 
-  * <<filter>>:
+  * **filter**:
   Defines `*.properties` files that contain a list of properties that apply to resources which
   accept their settings (covered below). In other words, the "`name=value`" pairs defined within
   the filter files replace `$\{name\}` strings within resources on build. The example above defines
   the `filter1.properties` file under the `filters/` directory. Maven's default filter
-  directory is `$\{project.basedir\}/src/main/filters/`.
+  directory is `${project.basedir}/src/main/filters/`.
 
   For a more comprehensive look at what filters are and what they can do, take a look at the
-  {{{./guides/getting-started}quick start guide}}.
+  [quick start guide](./guides/getting-started).
 
-**** Resources
+##### Resources
 
-  Another feature of `build` elements is specifying where resources exist within your project.
-  Resources are not (usually) code. They are not compiled, but are items meant to be
-  bundled within your project or used for various other reasons, such as code generation.
+Another feature of `build` elements is specifying where resources exist within your project.
+Resources are not (usually) code. They are not compiled, but are items meant to be
+bundled within your project or used for various other reasons, such as code generation.
 
-  For example, a Plexus project requires a `configuration.xml` file (which specifies component
-  configurations to the container) to live within the `META-INF/plexus` directory. Although we
-  could just as easily place this file within `src/main/resources/META-INF/plexus`, we want
-  instead to give Plexus its own directory of `src/main/plexus`. In order for the JAR plugin
-  to bundle the resource correctly, you would specify resources similar to the following:
+For example, a Plexus project requires a `configuration.xml` file (which specifies component
+configurations to the container) to live within the `META-INF/plexus` directory. Although we
+could just as easily place this file within `src/main/resources/META-INF/plexus`, we want
+instead to give Plexus its own directory of `src/main/plexus`. In order for the JAR plugin
+to bundle the resource correctly, you would specify resources similar to the following:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -816,39 +806,39 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
 </project>
 ```
 
-  * <<resources>>:
+  * **resources**:
   is a list of resource elements that each describe what and where to include files associated with this project.
 
-  * <<targetPath>>:
+  * **targetPath**:
   Specifies the directory structure to place the set of resources from a build. Target path defaults to the base
   directory. A commonly specified target path for resources that will be packaged in a JAR is META-INF.
 
-  * <<filtering>>:
+  * **filtering**:
   is `true` or `false`, denoting if filtering is to be enabled for this resource. Note, that filter
   `*.properties` files do not have to be defined for filtering to occur - resources can also use properties
-  that are by default defined in the POM (such as $\{project.version\}), passed into the command line using the
-  "-D" flag (for example, "`-Dname`=`value`") or are explicitly defined by the properties element.
+  that are by default defined in the POM (such as `${project.version}`), passed into the command line using the
+  "-D" flag (for example, "`-Dname`=`value`") or are explicitly defined by the properties' element.
   Filter files were covered above.
 
-  * <<directory>>:
+  * **directory**:
   This element's value defines where the resources are to be found. The default directory for a build is
-  `$\{project.basedir\}/src/main/resources`.
+  `${project.basedir}/src/main/resources`.
 
-  * <<includes>>:
-  A set of files patterns which specify the files to include as resources under that specified directory, using *
+  * **includes**:
+  A set of files patterns which specify the files to include as resources under that specified directory, using `*`
   as a wildcard.
 
-  * <<excludes>>:
+  * **excludes**:
   The same structure as `includes`, but specifies which files to ignore. In conflicts between `include`
   and `exclude`, `exclude` wins.
 
-  * <<testResources>>:
+  * **testResources**:
   The `testResources` element block contains `testResource`
   elements. Their definitions are similar to `resource` elements, but are naturally used during test
   phases. The one difference is that the default (Super POM defined) test resource directory for a project is
-  `$\{project.basedir\}/src/test/resources`. Test resources are not deployed.
+  `${project.basedir}/src/test/resources`. Test resources are not deployed.
 
-**** Plugins
+##### Plugins
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -874,22 +864,22 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
 
   Plugins are also identified by coordinates.
   Unlike dependencies, there is a default `groupId` for plugins.
-  See {{{/guides/mini/guide-configuring-plugins.html}Configuring Plugins}}.
+  See [Configuring Plugins](/guides/mini/guide-configuring-plugins.html).
 
-  <<Note>>: It is not allowed to declare the same plugin multiple times in the same build.
+  **Note**: It is not allowed to declare the same plugin multiple times in the same build.
   Multiple declarations of the same plugin result in warnings using Maven 3 and fail the build using Maven 4.
 
   Beyond the standard coordinate of `groupId:artifactId:version`, there are elements which
   configure the plugin or this builds interaction with it.
 
-  * <<extensions>>:
-  `true` or `false`, whether or not to load extensions of this plugin. It is by default false.
+  * **extensions**:
+  `true` or `false`, whether to load extensions of this plugin. It is by default false.
   Extensions are covered later in this document.
 
-  * <<inherited>>:
-  `true` or `false`, whether or not this plugin configuration should apply to POMs which inherit from this one.  Default value is `true`.
+  * **inherited**:
+  `true` or `false`, whether this plugin configuration should apply to POMs which inherit from this one.  Default value is `true`.
 
-  * <<configuration>>:
+  * **configuration**:
   This is specific to the individual plugin. Without going too in depth into the mechanics of how plugins work,
   suffice it to say that whatever properties that the plugin Mojo may expect (these are getters and setters in
   the Java Mojo bean) can be specified here. In the above example, we are setting the classifier property to
@@ -898,12 +888,12 @@ For plugin configuration you can overwrite the inheritance behaviour with the at
   values within a `configuration` element are never explicitly required by the POM schema, but a plugin goal
   has every right to require configuration values.
 
-  If your POM declares a parent, it inherits plugin configuration from either the
-  <<build/plugins>> or <<pluginManagement>> sections of the parent.
+If your POM declares a parent, it inherits plugin configuration from either the
+`<build/plugins>` or `<pluginManagement>` sections of the parent.
 
-    * {<<default configuration inheritance>>}:
+  * **default configuration inheritance**:
 
-    To illustrate, consider the following fragment from a parent POM:
+  To illustrate, consider the following fragment from a parent POM:
 
 ```xml
 <plugin>
